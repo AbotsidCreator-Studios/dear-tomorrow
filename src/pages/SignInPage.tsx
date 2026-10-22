@@ -1,42 +1,66 @@
+import { FormEvent, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
+import { loginUser } from '../utils/storage';
 
-const faqs = [
-  {
-    question: 'Can I edit a sealed letter?',
-    answer: 'No. Once you seal a letter, it is intentional and locked to preserve the version of you at that moment. You can still edit drafts before sealing.',
-  },
-  {
-    question: 'Are my letters private?',
-    answer: 'Yes. Dear Tomorrow keeps content private to your account and is designed to respect user ownership and security controls.',
-  },
-  {
-    question: 'What happens when a letter is ready?',
-    answer: 'A notification is prepared for your account when the future date arrives, and the letter becomes available for you to read.',
-  },
-  {
-    question: 'Can I delete my account?',
-    answer: 'Yes. From your privacy settings or account preferences, you can remove your content and account data with clear controls.',
-  },
-];
+const SignInPage = () => {
+  const navigate = useNavigate();
+  const [form, setForm] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
 
-const FAQsPage = () => (
-  <Layout>
-    <div className="content-page">
-      <div className="content-header">
-        <p className="eyebrow">FAQs</p>
-        <h1>Everything you need to know before you begin.</h1>
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const account = loginUser(form.email, form.password);
+
+    if (!account) {
+      setError('We could not find an account with those credentials.');
+      return;
+    }
+
+    navigate('/dashboard');
+  };
+
+  return (
+    <Layout>
+      <div className="auth-shell">
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <p className="eyebrow">Welcome back</p>
+          <h1>Sign in</h1>
+
+          {error && <div className="form-feedback form-feedback--error">{error}</div>}
+
+          <label>
+            Email
+            <input
+              type="email"
+              value={form.email}
+              onChange={(event) => setForm((current) => ({ ...current, email: event.target.value }))}
+              required
+            />
+          </label>
+
+          <label>
+            Password
+            <input
+              type="password"
+              value={form.password}
+              onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+              required
+            />
+          </label>
+
+          <button type="submit" className="primary-button wide-button">
+            Continue
+          </button>
+
+          <p className="auth-subtle">
+            New here? <Link to="/signup">Create account</Link>
+          </p>
+        </form>
       </div>
+    </Layout>
+  );
+};
 
-      <div className="faq-list">
-        {faqs.map((faq) => (
-          <div className="faq-item" key={faq.question}>
-            <h2>{faq.question}</h2>
-            <p>{faq.answer}</p>
-          </div>
-        ))}
-      </div>
-    </div>
-  </Layout>
-);
-
-export default FAQsPage;
+export default SignInPage;

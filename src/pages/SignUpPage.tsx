@@ -1,23 +1,29 @@
 import { FormEvent, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { loginUser } from '../utils/storage';
+import { createUser, getUsers } from '../utils/storage';
 
-const SignInPage = () => {
+const SignUpPage = () => {
   const navigate = useNavigate();
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    const account = loginUser(form.email, form.password);
-
-    if (!account) {
-      setError('We could not find an account with those credentials.');
+    if (!form.name.trim() || !form.email.trim() || !form.password.trim()) {
+      setError('Please complete all fields.');
       return;
     }
 
+    const existing = getUsers();
+
+    if (existing.some((item) => item.email.toLowerCase() === form.email.toLowerCase())) {
+      setError('An account with that email already exists.');
+      return;
+    }
+
+    createUser(form.name.trim(), form.email.trim(), form.password.trim());
     navigate('/dashboard');
   };
 
@@ -25,10 +31,20 @@ const SignInPage = () => {
     <Layout>
       <div className="auth-shell">
         <form className="auth-form" onSubmit={handleSubmit}>
-          <p className="eyebrow">Welcome back</p>
-          <h1>Sign in</h1>
+          <p className="eyebrow">Create your account</p>
+          <h1>Sign up</h1>
 
           {error && <div className="form-feedback form-feedback--error">{error}</div>}
+
+          <label>
+            Full name
+            <input
+              type="text"
+              value={form.name}
+              onChange={(event) => setForm((current) => ({ ...current, name: event.target.value }))}
+              required
+            />
+          </label>
 
           <label>
             Email
@@ -46,16 +62,17 @@ const SignInPage = () => {
               type="password"
               value={form.password}
               onChange={(event) => setForm((current) => ({ ...current, password: event.target.value }))}
+              minLength={6}
               required
             />
           </label>
 
           <button type="submit" className="primary-button wide-button">
-            Continue
+            Create account
           </button>
 
           <p className="auth-subtle">
-            New here? <Link to="/signup">Create account</Link>
+            Already have an account? <Link to="/login">Sign in</Link>
           </p>
         </form>
       </div>
@@ -63,4 +80,4 @@ const SignInPage = () => {
   );
 };
 
-export default SignInPage;
+export default SignUpPage;
